@@ -3,207 +3,312 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dynamic Shortest-Path Routing Visualizer</title>
+  <title>NetPath — Dynamic Routing Telemetry Visualizer</title>
   <style>
     :root {
-      --bg-main: #090d16;
-      --bg-card: #111827;
-      --bg-elevated: #1e293b;
-      --border: #263248;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent-green: #22c55e;
-      --accent-blue: #3b82f6;
-      --accent-red: #ef4444;
-      --accent-yellow: #facc15;
+      --bg-base: #09090b;
+      --bg-surface: #111114;
+      --bg-elevated: #18181b;
+      --bg-hover: #27272a;
+      --border-subtle: #27272a;
+      --border-strong: #3f3f46;
+      --text-primary: #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --emerald: #10b981;
+      --emerald-dim: rgba(16, 185, 129, 0.12);
+      --blue: #3b82f6;
+      --blue-dim: rgba(59, 130, 246, 0.14);
+      --rose: #f43f5e;
+      --rose-dim: rgba(244, 63, 94, 0.12);
+      --amber: #f59e0b;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+      --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background: radial-gradient(circle at top left, #131c31 0%, var(--bg-main) 55%);
-      color: var(--text-main);
+      font-family: var(--font-sans);
+      background-color: var(--bg-base);
+      color: var(--text-primary);
       min-height: 100vh;
-      padding: 28px 32px;
-    }
-
-    .container {
-      max-width: 1220px;
-      margin: 0 auto;
-    }
-
-    /* Header */
-    header {
       display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Navigation Bar */
+    .topbar {
+      height: 56px;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(9, 9, 11, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: flex-end;
-      margin-bottom: 22px;
-      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
       gap: 12px;
     }
 
-    .badge {
-      display: inline-block;
-      font-size: 11px;
+    .brand-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, var(--emerald), #059669);
+      display: grid;
+      place-items: center;
+      font-family: var(--font-mono);
+      font-size: 13px;
       font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #38bdf8;
-      background: rgba(56, 189, 248, 0.12);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      padding: 4px 10px;
-      border-radius: 999px;
-      margin-bottom: 8px;
+      color: #022c22;
     }
 
-    h1 {
-      font-size: 24px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-
-    .subtitle {
-      color: var(--text-muted);
+    .brand-title {
       font-size: 14px;
-      margin-top: 4px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
     }
 
-    /* Controls Toolbar */
-    .controls {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      padding: 14px 18px;
-      border-radius: 12px;
-      margin-bottom: 22px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    .brand-divider {
+      color: var(--border-strong);
+      font-weight: 300;
     }
 
-    .control-group {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      flex-wrap: wrap;
+    .brand-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
     }
 
-    label {
+    .status-pill {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--emerald);
+      background: var(--emerald-dim);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.85); }
+    }
+
+    /* Main Shell */
+    .shell {
+      max-width: 1360px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px 24px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Controls Bar */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+
+    .toolbar-left, .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .field-label {
+      font-size: 11px;
       font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
       color: var(--text-muted);
     }
 
     select {
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
+      appearance: none;
       background: var(--bg-elevated);
-      color: var(--text-main);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 6px 28px 6px 10px;
+      font-family: var(--font-sans);
       font-size: 13px;
       font-weight: 500;
       cursor: pointer;
       outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      transition: border-color 0.15s, background-color 0.15s;
     }
 
     select:hover, select:focus {
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+      border-color: var(--border-strong);
+      background-color: var(--bg-hover);
     }
 
-    .btn-group {
-      display: flex;
-      gap: 10px;
-    }
-
-    button {
-      padding: 9px 16px;
-      border-radius: 8px;
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 6px;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-subtle);
       background: var(--bg-elevated);
-      color: var(--text-main);
-      transition: transform 0.15s, background 0.2s, box-shadow 0.2s;
+      color: var(--text-primary);
+      transition: all 0.15s ease;
     }
 
-    button:hover {
-      background: #283548;
-      transform: translateY(-1px);
+    .btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-strong);
     }
 
-    button:active {
-      transform: translateY(0);
+    .btn-primary {
+      background: var(--text-primary);
+      color: var(--bg-base);
+      border-color: var(--text-primary);
+      font-weight: 600;
     }
 
-    #sendPacketBtn {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      color: #03150a;
-      border: none;
-      box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
+    .btn-primary:hover {
+      background: #e4e4e7;
+      border-color: #e4e4e7;
     }
 
-    #sendPacketBtn:hover {
-      background: linear-gradient(135deg, #4ade80, #22c55e);
-      box-shadow: 0 6px 18px rgba(34, 197, 94, 0.45);
-    }
-
-    /* Main Layout */
-    .layout {
+    /* Telemetry KPI Strip */
+    .kpi-grid {
       display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 22px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .kpi-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .kpi-value {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .kpi-value.accent-green { color: var(--emerald); }
+    .kpi-value.accent-rose { color: var(--rose); }
+
+    /* Workspace Grid */
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr 410px;
+      gap: 16px;
       align-items: start;
     }
 
-    @media (max-width: 1080px) {
-      .layout { grid-template-columns: 1fr; }
+    @media (max-width: 1120px) {
+      .workspace { grid-template-columns: 1fr; }
     }
 
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
+    .panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
     }
 
-    .card-header {
+    .panel-header {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border-subtle);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(24, 24, 27, 0.45);
     }
 
-    .card-title {
-      font-size: 14px;
+    .panel-title {
+      font-size: 12px;
       font-weight: 600;
-      letter-spacing: 0.01em;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
     }
 
-    .tip-pill {
+    .panel-hint {
       font-size: 12px;
       color: var(--text-muted);
     }
 
     /* SVG Canvas */
-    .canvas-wrap {
+    .canvas-stage {
       padding: 16px;
+      background-color: #0b0b0e;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 28px 28px;
       display: flex;
       justify-content: center;
-      background-color: #0d1321;
-      background-image: radial-gradient(#263248 1px, transparent 1px);
-      background-size: 20px 20px;
+      align-items: center;
     }
 
     svg {
@@ -213,24 +318,49 @@
       display: block;
     }
 
-    svg line {
-      transition: stroke 0.2s, stroke-width 0.2s, opacity 0.2s;
+    .edge-hit {
+      cursor: pointer;
     }
 
-    svg line:hover {
-      opacity: 0.75;
+    .edge-line {
+      transition: stroke 0.2s, stroke-width 0.2s;
+      pointer-events: none;
     }
 
-    /* Legend */
+    .edge-hit:hover + .edge-line {
+      stroke-opacity: 0.7;
+    }
+
+    .flow-line {
+      stroke-dasharray: 8 8;
+      animation: flow 0.8s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes flow {
+      from { stroke-dashoffset: 16; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    .weight-group {
+      cursor: pointer;
+    }
+
+    .weight-group:hover circle {
+      stroke: var(--text-primary);
+      fill: var(--bg-hover);
+    }
+
+    /* Legend Footer */
     .legend {
       display: flex;
-      gap: 18px;
+      gap: 20px;
       flex-wrap: wrap;
-      padding: 12px 18px;
-      border-top: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.5);
+      padding: 10px 16px;
+      border-top: 1px solid var(--border-subtle);
+      background: rgba(24, 24, 27, 0.35);
       font-size: 12px;
-      color: var(--text-muted);
+      color: var(--text-secondary);
     }
 
     .legend-item {
@@ -239,9 +369,16 @@
       gap: 7px;
     }
 
-    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-    .line-swatch { width: 18px; height: 3px; border-radius: 2px; display: inline-block; }
-    .line-dashed { width: 18px; border-top: 2px dashed var(--accent-red); display: inline-block; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .swatch { width: 16px; height: 2.5px; border-radius: 2px; }
+    .swatch-dashed { width: 16px; border-top: 2px dashed var(--rose); }
+
+    /* Right Column Stack */
+    .side-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
 
     /* Routing Table */
     table {
@@ -250,102 +387,265 @@
     }
 
     th, td {
-      padding: 12px 16px;
+      padding: 10px 14px;
       text-align: left;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 12.5px;
     }
 
     th {
-      background: rgba(2, 6, 23, 0.55);
-      color: var(--text-muted);
-      font-size: 11px;
-      font-weight: 700;
+      font-size: 10.5px;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.06em;
+      color: var(--text-muted);
+      background: rgba(9, 9, 11, 0.5);
     }
 
     tbody tr:last-child td { border-bottom: none; }
 
-    tbody tr:hover {
-      background: rgba(255, 255, 255, 0.03);
+    tbody tr.active-row {
+      background: var(--emerald-dim);
     }
 
-    td:nth-child(2), td:nth-child(3) {
-      font-family: 'JetBrains Mono', 'Consolas', monospace;
-      font-size: 12.5px;
+    tbody tr.active-row td:first-child {
+      color: var(--emerald);
     }
 
-    td:nth-child(2) {
-      color: #38bdf8;
+    .mono {
+      font-family: var(--font-mono);
+    }
+
+    .cost-cell {
+      font-family: var(--font-mono);
       font-weight: 600;
+      color: #38bdf8;
+    }
+
+    .unreachable {
+      color: var(--rose);
+    }
+
+    /* Event Log Console */
+    .log-body {
+      height: 158px;
+      overflow-y: auto;
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.65;
+      background: #09090b;
+    }
+
+    .log-entry {
+      display: flex;
+      gap: 8px;
+      color: var(--text-secondary);
+    }
+
+    .log-time { color: var(--text-muted); flex-shrink: 0; }
+    .log-tag-info { color: var(--blue); font-weight: 600; }
+    .log-tag-ok { color: var(--emerald); font-weight: 600; }
+    .log-tag-warn { color: var(--amber); font-weight: 600; }
+    .log-tag-err { color: var(--rose); font-weight: 600; }
+
+    /* Custom Weight Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      display: none;
+      place-items: center;
+      z-index: 50;
+    }
+
+    .modal-backdrop.open { display: grid; }
+
+    .modal {
+      width: 320px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 18px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .modal p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+    }
+
+    .modal input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 14px;
+    }
+
+    .modal input:focus {
+      border-color: var(--emerald);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div>
-        <span class="badge">DCN Activity 3e • Live Simulation</span>
-        <h1>Dynamic Shortest-Path Routing Visualizer</h1>
-        <p class="subtitle">Real-time pathfinding and link-failure rerouting using Dijkstra (OSPF) &amp; Bellman-Ford (RIP)</p>
-      </div>
-    </header>
 
-    <div class="controls">
-      <div class="control-group">
-        <label>Algorithm
-          <select id="algoSelect">
-            <option value="dijkstra">Dijkstra (OSPF)</option>
-            <option value="bellman">Bellman-Ford (RIP)</option>
-          </select>
-        </label>
-        <label>Source
-          <select id="startSelect"></select>
-        </label>
-        <label>Destination
-          <select id="endSelect"></select>
-        </label>
-      </div>
-      <div class="btn-group">
-        <button id="resetBtn">↻ Repair All Links</button>
-        <button id="sendPacketBtn">▶ Send Packet</button>
-      </div>
+  <nav class="topbar">
+    <div class="brand">
+      <div class="brand-icon">NP</div>
+      <span class="brand-title">NetPath Visualizer</span>
+      <span class="brand-divider">/</span>
+      <span class="brand-sub">OSPF (Dijkstra) &amp; RIP (Bellman-Ford)</span>
     </div>
+    <div class="status-pill">
+      <span class="pulse-dot"></span>
+      <span>CONVERGED</span>
+    </div>
+  </nav>
 
-    <div class="layout">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Network Topology</span>
-          <span class="tip-pill">Click any cable to simulate a link failure</span>
+  <main class="shell">
+    <!-- Controls -->
+    <section class="toolbar">
+      <div class="toolbar-left">
+        <div class="field">
+          <span class="field-label">Protocol</span>
+          <select id="algoSelect">
+            <option value="dijkstra">OSPF — Dijkstra (Lowest Cost)</option>
+            <option value="bellman">RIP — Bellman-Ford (Min Hops)</option>
+          </select>
         </div>
-        <div class="canvas-wrap">
-          <svg id="networkCanvas" viewBox="0 0 760 400" width="760" height="400"></svg>
+        <div class="field">
+          <span class="field-label">Src</span>
+          <select id="startSelect"></select>
+        </div>
+        <div class="field">
+          <span class="field-label">Dst</span>
+          <select id="endSelect"></select>
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <button id="resetBtn" class="btn">↻ Reset Topology</button>
+        <button id="sendPacketBtn" class="btn btn-primary">▶ Transmit Packet</button>
+      </div>
+    </section>
+
+    <!-- Live Telemetry KPIs -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-label">Active Optimal Path</span>
+        <span id="kpiPath" class="kpi-value accent-green">—</span>
+      </div>
+      <div class="kpi-card">
+        <span id="kpiMetricLabel" class="kpi-label">Total Path Cost</span>
+        <span id="kpiMetricValue" class="kpi-value">—</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Operational Links</span>
+        <span id="kpiLinks" class="kpi-value">12 / 12</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Convergence Time</span>
+        <span id="kpiLatency" class="kpi-value">0.00 ms</span>
+      </div>
+    </section>
+
+    <!-- Main Workspace -->
+    <section class="workspace">
+      <!-- Topology Canvas -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Hexagonal Mesh Topology</span>
+          <span class="panel-hint">Click cable to cut/repair • Click weight to edit</span>
+        </div>
+        <div class="canvas-stage">
+          <svg id="networkCanvas" viewBox="0 0 760 400" width="760" height="400">
+            <defs>
+              <filter id="glow-green" filterUnits="userSpaceOnUse" x="0" y="0" width="760" height="400">
+                <feGaussianBlur stdDeviation="3.5" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="glow-amber" filterUnits="userSpaceOnUse" x="0" y="0" width="760" height="400">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <g id="canvasLayer"></g>
+          </svg>
         </div>
         <div class="legend">
-          <div class="legend-item"><span class="dot" style="background: var(--accent-blue);"></span> Source</div>
-          <div class="legend-item"><span class="dot" style="background: var(--accent-green);"></span> Destination</div>
-          <div class="legend-item"><span class="line-swatch" style="background: var(--accent-green);"></span> Optimal Path</div>
-          <div class="legend-item"><span class="line-dashed"></span> Cut Link</div>
-          <div class="legend-item"><span class="dot" style="background: var(--accent-yellow);"></span> Data Packet</div>
+          <div class="legend-item"><span class="dot" style="background: var(--blue);"></span> Source</div>
+          <div class="legend-item"><span class="dot" style="background: var(--emerald);"></span> Destination</div>
+          <div class="legend-item"><span class="swatch" style="background: var(--emerald);"></span> Optimal Route</div>
+          <div class="legend-item"><span class="swatch-dashed"></span> Link Down</div>
+          <div class="legend-item"><span class="dot" style="background: var(--amber);"></span> Active Packet</div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Live Routing Table</span>
-          <span class="tip-pill">Auto-updates on reroute</span>
+      <!-- Right Sidebar: Routing Table + Telemetry Log -->
+      <div class="side-stack">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Forwarding Table (FIB)</span>
+            <span id="tableSourceTag" class="panel-hint mono">SRC: R1</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Dest</th>
+                <th id="metricHeader">Cost</th>
+                <th>Next-Hop Path</th>
+              </tr>
+            </thead>
+            <tbody id="routingTableBody"></tbody>
+          </table>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Dest</th>
-              <th>Cost</th>
-              <th>Shortest Path</th>
-            </tr>
-          </thead>
-          <tbody id="routingTableBody"></tbody>
-        </table>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Control Plane Log</span>
+            <span class="panel-hint mono">LIVE</span>
+          </div>
+          <div id="eventLog" class="log-body"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Custom Link Cost Modal -->
+  <div id="weightModal" class="modal-backdrop">
+    <div class="modal">
+      <h3 id="modalLinkTitle">Edit Link Cost</h3>
+      <p>Enter a positive integer metric for OSPF path calculation.</p>
+      <input id="weightInput" type="number" min="1" max="999" />
+      <div class="modal-actions">
+        <button id="cancelWeightBtn" class="btn">Cancel</button>
+        <button id="saveWeightBtn" class="btn btn-primary">Apply</button>
       </div>
     </div>
   </div>
