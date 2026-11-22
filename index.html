@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Shortest-Path Routing Visualizer</title>
+  <style>
+    :root {
+      --bg-main: #090d16;
+      --bg-card: #111827;
+      --bg-elevated: #1e293b;
+      --border: #263248;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-green: #22c55e;
+      --accent-blue: #3b82f6;
+      --accent-red: #ef4444;
+      --accent-yellow: #facc15;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at top left, #131c31 0%, var(--bg-main) 55%);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 28px 32px;
+    }
+
+    .container {
+      max-width: 1220px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    /* Controls Toolbar */
+    .controls {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 14px 18px;
+      border-radius: 12px;
+      margin-bottom: 22px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+
+    .control-group {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    select {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text-main);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    select:hover, select:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text-main);
+      transition: transform 0.15s, background 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      background: #283548;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    #sendPacketBtn {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #03150a;
+      border: none;
+      box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
+    }
+
+    #sendPacketBtn:hover {
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      box-shadow: 0 6px 18px rgba(34, 197, 94, 0.45);
+    }
+
+    /* Main Layout */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 22px;
+      align-items: start;
+    }
+
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.6);
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .tip-pill {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* SVG Canvas */
+    .canvas-wrap {
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+      background-color: #0d1321;
+      background-image: radial-gradient(#263248 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    svg {
+      width: 100%;
+      max-width: 760px;
+      height: auto;
+      display: block;
+    }
+
+    svg line {
+      transition: stroke 0.2s, stroke-width 0.2s, opacity 0.2s;
+    }
+
+    svg line:hover {
+      opacity: 0.75;
+    }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.5);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .line-swatch { width: 18px; height: 3px; border-radius: 2px; display: inline-block; }
+    .line-dashed { width: 18px; border-top: 2px dashed var(--accent-red); display: inline-block; }
+
+    /* Routing Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    th {
+      background: rgba(2, 6, 23, 0.55);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    td:nth-child(2), td:nth-child(3) {
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      font-size: 12.5px;
+    }
+
+    td:nth-child(2) {
+      color: #38bdf8;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <span class="badge">DCN Activity 3e • Live Simulation</span>
+        <h1>Dynamic Shortest-Path Routing Visualizer</h1>
+        <p class="subtitle">Real-time pathfinding and link-failure rerouting using Dijkstra (OSPF) &amp; Bellman-Ford (RIP)</p>
+      </div>
+    </header>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Algorithm
+          <select id="algoSelect">
+            <option value="dijkstra">Dijkstra (OSPF)</option>
+            <option value="bellman">Bellman-Ford (RIP)</option>
+          </select>
+        </label>
+        <label>Source
+          <select id="startSelect"></select>
+        </label>
+        <label>Destination
+          <select id="endSelect"></select>
+        </label>
+      </div>
+      <div class="btn-group">
+        <button id="resetBtn">↻ Repair All Links</button>
+        <button id="sendPacketBtn">▶ Send Packet</button>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Network Topology</span>
+          <span class="tip-pill">Click any cable to simulate a link failure</span>
+        </div>
+        <div class="canvas-wrap">
+          <svg id="networkCanvas" viewBox="0 0 760 400" width="760" height="400"></svg>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><span class="dot" style="background: var(--accent-blue);"></span> Source</div>
+          <div class="legend-item"><span class="dot" style="background: var(--accent-green);"></span> Destination</div>
+          <div class="legend-item"><span class="line-swatch" style="background: var(--accent-green);"></span> Optimal Path</div>
+          <div class="legend-item"><span class="line-dashed"></span> Cut Link</div>
+          <div class="legend-item"><span class="dot" style="background: var(--accent-yellow);"></span> Data Packet</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Live Routing Table</span>
+          <span class="tip-pill">Auto-updates on reroute</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Dest</th>
+              <th>Cost</th>
+              <th>Shortest Path</th>
+            </tr>
+          </thead>
+          <tbody id="routingTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
