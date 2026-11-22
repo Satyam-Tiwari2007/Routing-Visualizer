@@ -300,3 +300,4 @@ document.getElementById("sendPacketBtn").addEventListener("click", () => {
 });
 
 render();
+...
