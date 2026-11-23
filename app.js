@@ -20,7 +20,7 @@ const edges = [
 
   // Inner Spokes to Core Router (R7)
   { from: "R1", to: "R7", weight: 9, active: true },
-  { from: "R7", to: "R4", weight: 8, active: true },
+  { from: "R7", to: "R4", weight: 8, active: true }, 
   { from: "R2", to: "R7", weight: 5, active: true },
   { from: "R3", to: "R7", weight: 6, active: true },
   { from: "R5", to: "R7", weight: 2, active: true },
