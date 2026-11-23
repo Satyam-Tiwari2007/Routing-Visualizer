@@ -40,7 +40,7 @@ function runDijkstra(startId) {
     distances[node.id] = Infinity;
     previous[node.id] = null;
     unvisited.add(node.id);
-  });
+  }); 
   distances[startId] = 0;
 
   while (unvisited.size > 0) {
